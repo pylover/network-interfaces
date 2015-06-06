@@ -4,6 +4,10 @@ import os
 __author__ = 'vahid'
 
 
+def clean_list(l):
+    return [j for j in [i.strip().strip('"') for i in l] if j]
+
+
 class Stanza(object):
     type = None
     _filename = None
@@ -15,6 +19,7 @@ class Stanza(object):
 
     def add_entry(self, l):
         cells = re.split('\s+', l)
+        cells = clean_list(cells)
         if cells:
             self._items.append(cells)
 
@@ -40,6 +45,7 @@ class Stanza(object):
     @classmethod
     def create(cls, header, filename):
         cells = re.split('\s+', header)
+        cells = clean_list(cells)
         stanza_type = cells[0]
         subclasses = cls.subclasses()
 
@@ -203,7 +209,6 @@ class InterfacesFile(object):
                 continue
 
         raise KeyError(name)
-
 
     def normalize_path(self, p):
         if p.startswith('/'):
