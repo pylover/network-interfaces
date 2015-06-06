@@ -4,12 +4,13 @@
 
 auto eth0
 iface eth0 inet static
-  address 192.168.11.2
+  address 192.168.11.22
   netmask 255.255.255.240
   broadcast 192.168.11.15
   network 192.168.11.0
   gateway 192.168.11.1
   dns-nameservers 8.8.8.8 8.8.4.4
+  script /etc/network/if-up.d/eth0-up
 
 allow-hotplug wlan0
 iface wlan0 inet static

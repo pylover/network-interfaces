@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 import unittest
+import tempfile
 from os.path import join, dirname, abspath
+import os
 from network_interfaces import InterfacesFile, Auto, Allow
+
 __author__ = 'vahid'
 
 this_dir = abspath(dirname(__file__))
@@ -30,7 +33,6 @@ class NetworkingCase(unittest.TestCase):
         self.assertEquals(eth0.name, 'eth0')
         self.assertEquals(eth0.address_family, 'inet')
         self.assertEquals(eth0.method, 'static')
-        self.assertEquals(eth0.address, '192.168.11.2')
         self.assertEquals(eth0.netmask, '255.255.255.240')
         self.assertEquals(eth0.broadcast, '192.168.11.15')
         self.assertEquals(eth0.network, '192.168.11.0')
@@ -91,13 +93,39 @@ class NetworkingCase(unittest.TestCase):
 
         return f
 
-    def test_interfaces(self):
-        f = self.checkup_interfaces_file(self.interfaces_filename)
-        h1 = hash(f)
-        f.save(recursive=True)
+    def test_load_save(self):
+        f1 = self.checkup_interfaces_file(self.interfaces_filename)
+        h1 = hash(f1)
+        f1.save(recursive=True)
         f2 = self.checkup_interfaces_file(self.interfaces_filename)
-        h2 = hash(f)
+        h2 = hash(f2)
         self.assertEqual(h1, h2)
+
+    def test_manipulation(self):
+        temp_dir = tempfile.mkdtemp()
+        os.mkdir(join(temp_dir, 'interfaces.d'))
+
+        f1 = InterfacesFile(self.interfaces_filename)
+        new_filename = join(temp_dir, 'interfaces')
+        h1 = hash(f1)
+        f1.save(recursive=True, filename=new_filename)
+        f2 = self.checkup_interfaces_file(new_filename)
+        h2 = hash(f2)
+        self.assertEqual(h1, h2)
+
+        eth0 = f2.get_iface('eth0')
+
+        eth0.address = '192.168.11.2'
+        self.assertEqual(eth0.address, '192.168.11.2')
+
+        eth0.script = '/etc/network/if-up.d/eth0-up'
+        self.assertEqual(eth0.script, '/etc/network/if-up.d/eth0-up')
+        f2.save()
+        f3 = self.checkup_interfaces_file(new_filename)
+        eth0 = f3.get_iface('eth0')
+        self.assertEqual(eth0.address, '192.168.11.2')
+        self.assertEqual(eth0.script, '/etc/network/if-up.d/eth0-up')
+
 
 
 

@@ -3,6 +3,7 @@ import re
 import os
 import shutil
 
+__version__ = '0.1.0'
 __author__ = 'vahid'
 
 DEFAULT_HEADER = """
@@ -20,8 +21,10 @@ def list_hash(l):
 
 
 class Stanza(object):
-    type = None
+    _type = None
     _filename = None
+    _headers = None
+    _items = None
 
     def __init__(self, filename, *headers):
         self._filename = filename
@@ -38,11 +41,46 @@ class Stanza(object):
         return ' '.join(self._headers)
 
     def __getattr__(self, item):
-        key = item.replace('_', '-')
         try:
-            return ' '.join([i for i in self._items if i[0] == key][0][1:])
-        except IndexError:
+            return self[item]
+        except (KeyError, IndexError):
             raise AttributeError('%s %s' % (object.__repr__(self), item))
+
+    def __setattr__(self, key, value):
+        if hasattr(self.__class__, key):
+            super(Stanza, self).__setattr__(key, value)
+        else:
+            self[key] = value
+
+    def __getitem_internal(self, item):
+        key = item.replace('_', '-')
+        for i in self._items:
+            if i[0] == key:
+                return i
+        return None
+
+    def __getitem__(self, item):
+        if not isinstance(item, basestring):
+            raise TypeError(type(item))
+        result = self.__getitem_internal(item)
+        if not result:
+            raise KeyError(item)
+        return ' '.join(result[1:])
+
+    def __setitem__(self, key, value):
+        if not isinstance(key, basestring):
+            raise TypeError(type(key))
+        values = re.split('\s', value)
+
+        cells = self.__getitem_internal(key)
+        if not cells:
+            self.add_entry(' '.join([key] + values))
+        else:
+            del cells[1:]
+            cells += values
+
+    def __delitem__(self, key):
+        pass
 
     def _items_hash(self):
         result = 0
@@ -58,7 +96,7 @@ class Stanza(object):
 
     def __hash__(self):
         return \
-            self.type.__hash__() ^ \
+            self._type.__hash__() ^ \
             self._headers_hash() ^ \
             self._items_hash()
 
@@ -80,12 +118,12 @@ class Stanza(object):
 
         # Checking for exact match
         for subclass in subclasses:
-            if subclass.type and stanza_type == subclass.type:
+            if subclass._type and stanza_type == subclass._type:
                 return subclass(filename, *cells)
 
         # Partial start match
         for subclass in subclasses:
-            if subclass.type and stanza_type.startswith(subclass.type):
+            if subclass._type and stanza_type.startswith(subclass._type):
                 return subclass(filename, *cells)
 
 
@@ -107,11 +145,11 @@ class StartupStanza(Stanza):
 
 
 class Auto(StartupStanza):
-    type = 'auto'
+    _type = 'auto'
 
 
 class Allow(StartupStanza):
-    type = 'allow-'
+    _type = 'allow-'
 
 
 class IfaceBase(MultilineStanza):
@@ -135,7 +173,7 @@ class IfaceBase(MultilineStanza):
 
 
 class Iface(IfaceBase):
-    type = 'iface'
+    _type = 'iface'
 
     @property
     def address_family(self):
@@ -155,7 +193,7 @@ class Iface(IfaceBase):
 
 
 class Mapping(IfaceBase):
-    type = 'mapping'
+    _type = 'mapping'
 
     def __getattr__(self, item):
         if item.startswith('map_'):
@@ -170,7 +208,7 @@ class Mapping(IfaceBase):
 
 
 class Source(Stanza):
-    type = 'source'
+    _type = 'source'
 
     @property
     def source_filename(self):
@@ -182,7 +220,7 @@ class Source(Stanza):
 
 
 class SourceDirectory(Stanza):
-    type = 'source-directory'
+    _type = 'source-directory'
 
     @property
     def source_directory(self):
@@ -194,7 +232,20 @@ class SourceDirectory(Stanza):
 
 
 class InterfacesFile(object):
-    def __init__(self, filename, header=DEFAULT_HEADER, backup='.back'):
+
+    @property
+    def absolute_filename(self):
+        if self.filename.startswith('/'):
+            return self.filename
+
+        if self.source:
+            rootdir = os.path.dirname(self.source._filename)
+            return os.path.abspath(os.path.join(rootdir, self.filename))
+
+        raise ValueError('Cannot resolve absolute path for %s' % self.filename)
+
+    def __init__(self, filename, header=DEFAULT_HEADER, backup='.back', source=None):
+        self.source = source
         self.filename = filename
         self.dirname = os.path.dirname(filename)
         self.sub_files = []
@@ -202,7 +253,8 @@ class InterfacesFile(object):
         self.backup = backup
         current_stanza = None
         stanzas = []
-        with open(self.filename) as f:
+
+        with open(self.absolute_filename) as f:
             for l in f:
                 line = l.strip()
                 if not line or line.startswith('#'):
@@ -228,15 +280,15 @@ class InterfacesFile(object):
         subfiles = []
         for i in self.sources:
             if isinstance(i, SourceDirectory):
-                d = self.normalize_path(i.source_directory)
-                subfiles += [os.path.join(d, f) for f in os.listdir(d)
-                             if os.path.isfile(os.path.join(d, f)) and
+                d = i.source_directory
+                subfiles += [(os.path.join(d, f), i) for f in os.listdir(os.path.join(self.dirname, d))
+                             if os.path.isfile(os.path.join(self.dirname, d, f)) and
                              re.match('^[a-zA-Z0-9_-]+$', f)]
             else:
-                subfiles.append(self.normalize_path(i.source_filename))
+                subfiles.append((i.source_filename, i))
 
         for subfile in subfiles:
-            self.sub_files.append(InterfacesFile(subfile))
+            self.sub_files.append(InterfacesFile(subfile[0], source=subfile[1]))
 
         for startup in [s for s in stanzas if isinstance(s, StartupStanza)]:
             self.get_iface(startup.iface_name).startup = startup
@@ -257,15 +309,21 @@ class InterfacesFile(object):
 
         raise KeyError(name)
 
-    def normalize_path(self, p):
-        if p.startswith('/'):
-            return p
-        return os.path.join(self.dirname, p)
+    # def normalize_path(self, p):
+    #     if p.startswith('/'):
+    #         return p
+    #     return os.path.join(self.dirname, p)
 
-    def save(self, recursive=False):
-        if self.backup:
-            shutil.copyfile(self.filename, '%s%s' % (self.filename, self.backup))
-        with open(self.filename, 'w') as f:
+    def save(self, recursive=False, filename=None, directory=None):
+
+        filename = filename if filename else self.filename
+        if not filename.startswith('/') and directory:
+            filename = os.path.abspath(os.path.join(directory, filename))
+
+        if self.backup and os.path.exists(filename):
+            shutil.copyfile(filename, '%s%s' % (filename, self.backup))
+
+        with open(filename, 'w') as f:
             f.write(self.header)
             for iface in self.interfaces:
                 f.write('\n')
@@ -280,8 +338,9 @@ class InterfacesFile(object):
                 f.write(repr(source))
 
         if recursive:
+            dirname = directory if directory else os.path.abspath(os.path.dirname(filename))
             for sub_file in self.sub_files:
-                sub_file.save(recursive=recursive)
+                sub_file.save(recursive=recursive, directory=dirname)
 
     def __hash__(self):
         result = 0
@@ -294,3 +353,10 @@ class InterfacesFile(object):
         for source in self.sources:
             result ^= hash(source)
         return result
+
+
+class InterfaceMainFile(InterfacesFile):
+
+    def __init__(self, *args, **kwargs):
+        super(InterfaceMainFile, self).__init__(*args, **kwargs)
+
