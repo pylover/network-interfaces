@@ -2,6 +2,7 @@
 from .stanza import MultilineStanza
 __author__ = 'vahid'
 
+
 class IfaceBase(MultilineStanza):
     startup = None
 

@@ -120,12 +120,16 @@ class NetworkingCase(unittest.TestCase):
 
         eth0.script = '/etc/network/if-up.d/eth0-up'
         self.assertEqual(eth0.script, '/etc/network/if-up.d/eth0-up')
-        f2.save()
-        f3 = self.checkup_interfaces_file(new_filename)
+
+        del eth0.netmask
+
+        f2.save(new_filename)
+        f3 = InterfacesFile(new_filename)
         eth0 = f3.get_iface('eth0')
         self.assertEqual(eth0.address, '192.168.11.2')
         self.assertEqual(eth0.script, '/etc/network/if-up.d/eth0-up')
-
+        self.assertRaises(AttributeError, lambda: self.netmask)
+        #print eth0.netmask
 
 
 

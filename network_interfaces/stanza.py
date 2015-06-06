@@ -35,12 +35,25 @@ class Stanza(object):
         else:
             self[key] = value
 
+    def __delattr__(self, item):
+        if hasattr(self.__class__, item):
+            super(Stanza, self).__delattr__(item)
+        else:
+            del self[item]
+
     def __getitem_internal(self, item):
         key = item.replace('_', '-')
         for i in self._items:
             if i[0] == key:
                 return i
         return None
+
+    def __delitem_internal(self, item):
+        key = item.replace('_', '-')
+        for i in self._items:
+            if i[0] == key:
+                self._items.remove(i)
+                return
 
     def __getitem__(self, item):
         if not isinstance(item, basestring):
@@ -62,8 +75,10 @@ class Stanza(object):
             del cells[1:]
             cells += values
 
-    def __delitem__(self, key):
-        pass
+    def __delitem__(self, item):
+        if not isinstance(item, basestring):
+            raise TypeError(type(item))
+        self.__delitem_internal(item)
 
     def _items_hash(self):
         result = 0
