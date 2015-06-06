@@ -2,6 +2,7 @@
 import re
 import os
 import shutil
+
 __author__ = 'vahid'
 
 DEFAULT_HEADER = """
@@ -9,8 +10,13 @@ DEFAULT_HEADER = """
 # You may manually edit this file. But it may be rewritten by the library.
 """
 
+
 def clean_list(l):
     return [j for j in [i.strip().strip('"') for i in l] if j]
+
+
+def list_hash(l):
+    return hash(tuple(l))
 
 
 class Stanza(object):
@@ -37,6 +43,24 @@ class Stanza(object):
             return ' '.join([i for i in self._items if i[0] == key][0][1:])
         except IndexError:
             raise AttributeError('%s %s' % (object.__repr__(self), item))
+
+    def _items_hash(self):
+        result = 0
+        for i in self._items:
+            result ^= list_hash(i)
+        return result
+
+    def _headers_hash(self):
+        result = 0
+        for h in self._headers:
+            result ^= h.__hash__()
+        return result
+
+    def __hash__(self):
+        return \
+            self.type.__hash__() ^ \
+            self._headers_hash() ^ \
+            self._items_hash()
 
     @classmethod
     def is_stanza(cls, s):
@@ -66,7 +90,6 @@ class Stanza(object):
 
 
 class MultilineStanza(Stanza):
-
     def __repr__(self):
         return '%s\n%s\n' % (
             super(MultilineStanza, self).__repr__(),
@@ -74,7 +97,6 @@ class MultilineStanza(Stanza):
 
 
 class StartupStanza(Stanza):
-
     @property
     def mode(self):
         return self._headers[0]
@@ -103,6 +125,14 @@ class IfaceBase(MultilineStanza):
     def name(self, val):
         self._headers[1] = val
 
+    def __hash__(self):
+        return hash(self.startup) ^ super(IfaceBase, self).__hash__()
+
+    def __repr__(self):
+        if self.startup:
+            return '%s\n%s' % (self.startup, super(IfaceBase, self).__repr__())
+        return super(IfaceBase, self).__repr__()
+
 
 class Iface(IfaceBase):
     type = 'iface'
@@ -123,9 +153,6 @@ class Iface(IfaceBase):
     def method(self, val):
         self._headers[3] = val
 
-    def __repr__(self):
-        return '%s\n%s' % (self.startup, super(Iface, self).__repr__())
-
 
 class Mapping(IfaceBase):
     type = 'mapping'
@@ -135,11 +162,12 @@ class Mapping(IfaceBase):
             map_name = item.split('_')[1]
             key = map_name.replace('_', '-')
             return ' '.join([i for i in self._items if i[0] == 'map' and i[1] == key][0][2:])
-        return  super(Mapping, self).__getattr__(item)
+        return super(Mapping, self).__getattr__(item)
 
     @property
     def mappings(self):
         return [i for i in self._items if i[0] == 'map']
+
 
 class Source(Stanza):
     type = 'source'
@@ -166,7 +194,6 @@ class SourceDirectory(Stanza):
 
 
 class InterfacesFile(object):
-
     def __init__(self, filename, header=DEFAULT_HEADER, backup='.back'):
         self.filename = filename
         self.dirname = os.path.dirname(filename)
@@ -255,3 +282,15 @@ class InterfacesFile(object):
         if recursive:
             for sub_file in self.sub_files:
                 sub_file.save(recursive=recursive)
+
+    def __hash__(self):
+        result = 0
+        for iface in self.interfaces:
+            result ^= hash(iface)
+
+        for map in self.mappings:
+            result ^= hash(map)
+
+        for source in self.sources:
+            result ^= hash(source)
+        return result

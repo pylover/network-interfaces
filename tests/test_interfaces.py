@@ -93,7 +93,12 @@ class NetworkingCase(unittest.TestCase):
 
     def test_interfaces(self):
         f = self.checkup_interfaces_file(self.interfaces_filename)
+        h1 = hash(f)
         f.save(recursive=True)
+        f2 = self.checkup_interfaces_file(self.interfaces_filename)
+        h2 = hash(f)
+        self.assertEqual(h1, h2)
+
 
 
 
