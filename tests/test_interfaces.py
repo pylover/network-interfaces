@@ -12,8 +12,8 @@ class NetworkingCase(unittest.TestCase):
     def setUp(self):
         self.interfaces_filename = join(data_dir, 'interfaces')
 
-    def test_interfaces(self):
-        f = InterfacesFile(self.interfaces_filename)
+    def checkup_interfaces_file(self, filename):
+        f = InterfacesFile(filename)
 
         self.assertRaises(KeyError, f.get_iface, 'non-existance-iface')
 
@@ -88,6 +88,14 @@ class NetworkingCase(unittest.TestCase):
         self.assertEquals(eth2_home.address, '192.168.1.1')
         self.assertEquals(eth2_home.netmask, '255.255.255.0')
         self.assertEquals(eth2_home.up, 'flush-mail')
+
+        return f
+
+    def test_interfaces(self):
+        f = self.checkup_interfaces_file(self.interfaces_filename)
+        f.save(recursive=True)
+
+
 
 if __name__ == '__main__':
     unittest.main()
