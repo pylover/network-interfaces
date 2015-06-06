@@ -87,8 +87,7 @@ class Allow(StartupStanza):
     type = 'allow-'
 
 
-class Iface(MultilineStanza):
-    type = 'iface'
+class IfaceBase(MultilineStanza):
     startup = None
 
     @property
@@ -98,6 +97,10 @@ class Iface(MultilineStanza):
     @name.setter
     def name(self, val):
         self._headers[1] = val
+
+
+class Iface(IfaceBase):
+    type = 'iface'
 
     @property
     def address_family(self):
@@ -119,9 +122,19 @@ class Iface(MultilineStanza):
         return '%s\n%s' % (self.startup, super(Iface, self).__repr__())
 
 
-class Mapping(MultilineStanza):
+class Mapping(IfaceBase):
     type = 'mapping'
 
+    def __getattr__(self, item):
+        if item.startswith('map_'):
+            map_name = item.split('_')[1]
+            key = map_name.replace('_', '-')
+            return ' '.join([i for i in self._items if i[0] == 'map' and i[1] == key][0][2:])
+        return  super(Mapping, self).__getattr__(item)
+
+    @property
+    def mappings(self):
+        return [i for i in self._items if i[0] == 'map']
 
 class Source(Stanza):
     type = 'source'
@@ -198,7 +211,7 @@ class InterfacesFile(object):
         return [iface for iface in self.interfaces if iface.name.index(name)]
 
     def get_iface(self, name):
-        result = [iface for iface in self.interfaces if iface.name == name]
+        result = [iface for iface in self.interfaces + self.mappings if iface.name == name]
         if result:
             return result[0]
 

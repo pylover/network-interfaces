@@ -68,7 +68,26 @@ class NetworkingCase(unittest.TestCase):
         self.assertEquals(wlan1.wpa_ssid, 'Dorfak')
         self.assertEquals(wlan1.wpa_psk, 'ShoorPalangGoolakhTappeh')
         self.assertRaises(AttributeError, lambda: wlan1.address)
-        
+
+        eth2 = f.get_iface('eth2')
+        self.assertEquals(eth2.startup.mode, 'auto')
+        self.assertIsInstance(eth2.startup, Auto)
+        self.assertEquals(eth2.name, 'eth2')
+        self.assertEquals(eth2.script, '/usr/local/sbin/map-scheme')
+        self.assertEquals(eth2.map_HOME, 'eth2-home')
+        self.assertEquals(eth2.map_WORK, 'eth2-work')
+        self.assertEquals(eth2.mappings, [
+            ['map', 'HOME', 'eth2-home'],
+            ['map', 'WORK', 'eth2-work']])
+
+        eth2_home = f.get_iface('eth2-home')
+        self.assertIsNone(eth2_home.startup)
+        self.assertEquals(eth2_home.name, 'eth2-home')
+        self.assertEquals(eth2_home.address_family, 'inet')
+        self.assertEquals(eth2_home.method, 'static')
+        self.assertEquals(eth2_home.address, '192.168.1.1')
+        self.assertEquals(eth2_home.netmask, '255.255.255.0')
+        self.assertEquals(eth2_home.up, 'flush-mail')
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,5 +1,6 @@
 
 
+auto eth2
 mapping eth2
   script /usr/local/sbin/map-scheme
   map HOME eth2-home
