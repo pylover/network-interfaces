@@ -1,0 +1,27 @@
+
+# interfaces(5) file used by ifup(8) and ifdown(8)
+source loopback
+
+
+# The primary network interface
+auto eth0
+iface eth0 inet static
+ address 192.168.11.2
+ netmask 255.255.255.240
+ broadcast 192.168.11.15
+ network 192.168.11.0
+ gateway 192.168.11.1
+ dns-nameservers 8.8.8.8 8.8.4.4
+
+
+allow-hotplug wlan0
+iface wlan0 inet static
+  address 192.168.9.41
+  broadcast 192.168.9.255
+  network 192.168.9.0
+  netmask 255.255.255.0
+  gateway 192.168.9.1
+  wpa-ssid khayyam
+  wpa-psk <-Wine&Is&Mine->
+
+source-directory  interfaces.d

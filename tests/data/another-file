@@ -1,0 +1,9 @@
+
+auto eth2
+iface eth2 inet dhcp
+ address 192.168.20.2
+ netmask 255.255.255.240
+ broadcast 192.168.20.15
+ network 192.168.20.0
+ gateway 192.168.20.1
+ dns-nameservers 8.8.8.8 8.8.4.4
