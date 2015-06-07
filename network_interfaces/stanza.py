@@ -107,9 +107,10 @@ class MultilineStanza(Stanza):
         self.__delitem_internal(item)
 
     def __repr__(self):
+        items = [(i[0], ' '.join(i[1:]).strip()) for i in self._items]
         return '%s\n%s\n' % (
             super(MultilineStanza, self).__repr__(),
-            '\n'.join(['  ' + ' '.join(i) for i in self._items]))
+            '\n'.join(['  %s %s' % (i[0], i[1]) for i in items if i[1]]))
 
     def __hash__(self):
         return super(MultilineStanza, self).__hash__() ^ self._items_hash()
@@ -117,7 +118,7 @@ class MultilineStanza(Stanza):
     def update(self, other):
         if isinstance(other, dict):
             for k, v in other.items():
-                self[k] = v
+                self[k.replace('_', '-')] = v
         else:
             raise ValueError('A dict is required, but %s was passed.' % type(other))
 
