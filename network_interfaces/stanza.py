@@ -12,20 +12,8 @@ class Stanza(object):
         self._filename = filename
         self._headers = headers
 
-    def add_entry(self, l):
-        cells = re.split('\s+', l)
-        cells = clean_list(cells)
-        if cells:
-            self._items.append(cells)
-
     def __repr__(self):
         return ' '.join(self._headers)
-
-    def _items_hash(self):
-        result = 0
-        for i in self._items:
-            result ^= list_hash(i)
-        return result
 
     def _headers_hash(self):
         result = 0
@@ -126,11 +114,24 @@ class MultilineStanza(Stanza):
     def __hash__(self):
         return super(MultilineStanza, self).__hash__() ^ self._items_hash()
 
+    def update(self, other):
+        if isinstance(other, dict):
+            for k, v in other.items():
+                self[k] = v
+        else:
+            raise ValueError('A dict is required, but %s was passed.' % type(other))
+
     def _items_hash(self):
         result = 0
         for i in self._items:
             result ^= list_hash(i)
         return result
+
+    def add_entry(self, l):
+        cells = re.split('\s+', l)
+        cells = clean_list(cells)
+        if cells:
+            self._items.append(cells)
 
     def __getitem_internal(self, item):
         key = item.replace('_', '-')
