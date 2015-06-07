@@ -39,6 +39,10 @@ class NetworkingCase(unittest.TestCase):
         self.assertEquals(eth0.gateway, '192.168.11.1')
         self.assertEquals(eth0.dns_nameservers, '8.8.8.8 8.8.4.4')
 
+        self.assertTrue(hasattr(eth0, 'netmask'))
+        self.assertTrue('netmask' in eth0)
+        self.assertFalse('lorem' in eth0)
+
         eth1 = f.get_iface('eth1')
         self.assertEquals(eth1.startup.mode, 'auto')
         self.assertIsInstance(eth1.startup, Auto)

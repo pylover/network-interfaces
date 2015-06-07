@@ -55,6 +55,9 @@ class Stanza(object):
                 self._items.remove(i)
                 return
 
+    def __contains__(self, item):
+        return self.__getitem_internal(item) is not None
+
     def __getitem__(self, item):
         if not isinstance(item, basestring):
             raise TypeError(type(item))

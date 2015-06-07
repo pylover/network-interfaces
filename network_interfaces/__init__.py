@@ -6,4 +6,4 @@ from .source import Source, SourceDirectory
 from .stanza import Stanza, MultilineStanza
 from startup import Allow, Auto, StartupStanza
 __author__ = 'vahid'
-__version__ = '0.1.1'
+__version__ = '0.1.2'
