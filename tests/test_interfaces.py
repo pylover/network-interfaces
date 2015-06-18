@@ -3,7 +3,7 @@ import unittest
 import tempfile
 from os.path import join, dirname, abspath
 import os
-from network_interfaces import InterfacesFile, Auto, Allow
+from network_interfaces import InterfacesFile, Auto, Allow, ValidationError
 
 __author__ = 'vahid'
 
@@ -126,14 +126,22 @@ class NetworkingCase(unittest.TestCase):
         self.assertEqual(eth0.script, '/etc/network/if-up.d/eth0-up')
 
         del eth0.netmask
+        f2.save(new_filename, validate=False)
 
-        f2.save(new_filename)
         f3 = InterfacesFile(new_filename)
         eth0 = f3.get_iface('eth0')
         self.assertEqual(eth0.address, '192.168.11.2')
         self.assertEqual(eth0.script, '/etc/network/if-up.d/eth0-up')
         self.assertRaises(AttributeError, lambda: self.netmask)
         #print eth0.netmask
+
+    def test_validate(self):
+        f1 = InterfacesFile(self.interfaces_filename)
+        eth0 = f1.get_iface('eth0')
+        self.assertTrue(eth0.validate())
+        eth0.address = '192.168.90.3'
+        self.assertRaises(ValidationError, eth0.validate)
+
 
 
 

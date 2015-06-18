@@ -12,7 +12,10 @@ except ImportError:
 with open(os.path.join(os.path.dirname(__file__), 'network_interfaces', '__init__.py')) as v_file:
     package_version = re.compile(r".*__version__ = '(.*?)'", re.S).match(v_file.read()).group(1)
 
-dependencies = []
+dependencies = [
+    'ipcalc'
+]
+
 
 def read(filename):
     return open(os.path.join(os.path.dirname(__file__), filename)).read()

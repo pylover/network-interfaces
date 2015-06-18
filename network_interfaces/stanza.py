@@ -52,6 +52,9 @@ class Stanza(object):
             if subclass._type and stanza_type.startswith(subclass._type):
                 return subclass(filename, *cells)
 
+    def validate(self, allow_correction=False):
+        pass
+
 
 class MultilineStanza(Stanza):
     _items = None

@@ -5,6 +5,7 @@
 iface eth2-home inet static
   address 192.168.1.1
   netmask 255.255.255.0
+  network 192.168.1.0
   up flush-mail
 
 auto eth2

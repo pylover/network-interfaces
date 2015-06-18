@@ -4,7 +4,7 @@
 
 auto eth0
 iface eth0 inet static
-  address 192.168.11.22
+  address 192.168.11.2
   netmask 255.255.255.240
   broadcast 192.168.11.15
   network 192.168.11.0

@@ -87,7 +87,15 @@ class InterfacesFile(object):
 
         raise KeyError(name)
 
-    def save(self, recursive=False, filename=None, directory=None):
+    def validate(self, allow_correction=False):
+        for stanza_collection in (self.interfaces, self.mappings, self.sources):
+            for stanza in stanza_collection:
+                stanza.validate(allow_correction=allow_correction)
+
+    def save(self, recursive=False, filename=None, directory=None, validate=True, allow_correction=True):
+
+        if validate:
+            self.validate(allow_correction=allow_correction)
 
         filename = filename if filename else self.filename
         if not filename.startswith('/') and directory:
