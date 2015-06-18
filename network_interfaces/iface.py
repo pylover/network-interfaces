@@ -44,16 +44,22 @@ class Iface(IfaceBase):
     def method(self, val):
         self._headers[3] = val
 
+    @property
+    def address_netmask(self):
+        return '%s/%s' % (self.address, self.netmask)
+
     def validate(self, allow_correction=False):
         if self.method == 'static':
-            if 'network' not in self:
-                raise ValidationError('The network option was not exists in the %s' % self.name)
 
             if 'netmask' not in self:
                 raise ValidationError('The netmask option was not exists in the %s' % self.name)
 
-            # if not allow_correction:
-            # else:
+            if allow_correction:
+                self.network = str(ipcalc.IP(self.address_netmask).guess_network()).split('/')[0]
+            else:
+                if 'network' not in self:
+                    raise ValidationError('The network option was not exists in the %s' % self.name)
+
 
             network = ipcalc.Network('%s/%s' % (self.network, self.netmask))
             if ipcalc.IP(self.address) not in network:

@@ -144,9 +144,9 @@ class NetworkingCase(unittest.TestCase):
         self.assertRaises(ValidationError, eth0.validate)
         self.assertTrue(eth0.validate(allow_correction=True))
 
-        del eth0.netmask
-        self.assertRaises(ValidationError, eth0.validate)
-        self.assertTrue(eth0.validate(allow_correction=True))
+        # del eth0.netmask
+        # self.assertRaises(ValidationError, eth0.validate)
+        # self.assertTrue(eth0.validate(allow_correction=True))
 
         eth0.address = '192.168.90.3'
         self.assertRaises(ValidationError, eth0.validate)

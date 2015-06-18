@@ -67,7 +67,8 @@ class MultilineStanza(Stanza):
         try:
             return self[item]
         except (KeyError, IndexError):
-            raise AttributeError('%s %s' % (object.__repr__(self), item))
+            return super(MultilineStanza, self).__getattribute__(item)
+            #raise AttributeError('%s %s' % (object.__repr__(self), item))
 
     def __setattr__(self, key, value):
         if hasattr(self.__class__, key):
