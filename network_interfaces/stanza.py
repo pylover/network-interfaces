@@ -10,7 +10,7 @@ class Stanza(object):
 
     def __init__(self, filename, *headers):
         self._filename = filename
-        self._headers = headers
+        self._headers = list(headers)
 
     def __repr__(self):
         return ' '.join(self._headers)
