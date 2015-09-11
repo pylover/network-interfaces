@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from .stanza import MultilineStanza
-import ipcalc
 from .errors import ValidationError
 __author__ = 'vahid'
 
@@ -49,21 +48,6 @@ class Iface(IfaceBase):
         return '%s/%s' % (self.address, self.netmask)
 
     def validate(self, allow_correction=False):
-        if self.method == 'static':
-
-            if 'netmask' not in self:
-                raise ValidationError('The netmask option was not exists in the %s' % self.name)
-
-            if allow_correction:
-                self.network = str(ipcalc.IP(self.address_netmask).guess_network()).split('/')[0]
-            else:
-                if 'network' not in self:
-                    raise ValidationError('The network option was not exists in the %s' % self.name)
-
-
-            network = ipcalc.Network('%s/%s' % (self.network, self.netmask))
-            if ipcalc.IP(self.address) not in network:
-                raise ValidationError('The ip address: %s was not exists in the network: %s' % (self.address, network))
         return True
 
 
