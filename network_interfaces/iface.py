@@ -48,6 +48,11 @@ class Iface(IfaceBase):
         return '%s/%s' % (self.address, self.netmask)
 
     def validate(self, allow_correction=False):
+
+        # Returning true for now.
+        # FIXME: implement validation
+        # if not (hasattr(self, 'network')):
+        #     raise ValidationError()
         return True
 
 
