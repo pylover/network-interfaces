@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from stanza import Stanza
+from .stanza import Stanza
 __author__ = 'vahid'
 
 class Source(Stanza):
