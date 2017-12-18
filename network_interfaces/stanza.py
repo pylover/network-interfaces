@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import re
+
 from .helpers import clean_list, list_hash
+
 __author__ = 'vahid'
 
 
@@ -136,7 +138,7 @@ class MultilineStanza(Stanza):
     def add_entry(self, l):
         cells = re.split('\s+', l)
         cells = clean_list(cells)
-        if cells:
+        if cells and cells not in self._items:
             self._items.append(cells)
 
     def __getitem_internal(self, item):
