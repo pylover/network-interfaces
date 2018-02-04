@@ -2,6 +2,7 @@
 from .stanza import Stanza
 __author__ = 'vahid'
 
+
 class Source(Stanza):
     _type = 'source'
 

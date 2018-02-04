@@ -57,6 +57,7 @@ class InterfacesFile(object):
             stanzas.remove(i)
 
         self.sources = [source for source in stanzas if isinstance(source, (Source, SourceDirectory))]
+
         subfiles = []
         for i in self.sources:
             if isinstance(i, SourceDirectory):
