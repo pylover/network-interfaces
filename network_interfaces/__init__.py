@@ -7,4 +7,4 @@ from .stanza import Stanza, MultilineStanza
 from .startup import Allow, Auto, StartupStanza
 from .errors import ValidationError
 __author__ = 'vahid'
-__version__ = '0.2.0'
+__version__ = '0.2.1'
