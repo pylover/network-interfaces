@@ -23,5 +23,6 @@ iface wlan0 inet static
   wpa-psk <-Wine&Is&Mine->
 
 source loopback
-source-directory interfaces.d
-source interfaces.d/*
+source interfaces.d/wlan1
+source interfaces.d/eth2
+source interfaces.d/eth1

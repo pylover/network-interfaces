@@ -42,7 +42,19 @@ class InterfacesFile(object):
                 if Stanza.is_stanza(line):
                     if current_stanza:
                         stanzas.append(current_stanza)
-                    current_stanza = Stanza.create(line, self.filename)
+                    cells = re.split('\s+', line)
+                    if cells[0] == 'source' and cells[1].endswith('/*'):
+                        list_files = glob.glob(os.path.join(self.dirname, cells[1]))
+                        for file in list_files:
+                            if file.endswith('.back'):
+                                continue
+                            file = f'source {file}'
+                            file = file.replace(f'{self.dirname}/', '')
+                            s = Stanza.create(file, self.filename)
+                            stanzas.append(s)
+                            current_stanza = None
+                    else:
+                        current_stanza = Stanza.create(line, self.filename)
                 else:
                     current_stanza.add_entry(line)
             if current_stanza:

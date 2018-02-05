@@ -106,14 +106,14 @@ class NetworkingCase(unittest.TestCase):
     def test_load_two(self):
         self.checkup_interfaces_file(self.interfaces_filename_two)
 
-    # def test_load_three(self):
-    #     self.checkup_interfaces_file(self.interfaces_filename_three)
+    def test_load_three(self):
+        self.checkup_interfaces_file(self.interfaces_filename_three)
 
     def test_load_save(self):
-        f1 = self.checkup_interfaces_file(self.interfaces_filename_one)
+        f1 = self.checkup_interfaces_file(self.interfaces_filename_three)
         h1 = hash(f1)
         f1.save(recursive=True)
-        f2 = self.checkup_interfaces_file(self.interfaces_filename_one)
+        f2 = self.checkup_interfaces_file(self.interfaces_filename_three)
         h2 = hash(f2)
         self.assertEqual(h1, h2)
 
@@ -121,7 +121,7 @@ class NetworkingCase(unittest.TestCase):
         temp_dir = tempfile.mkdtemp()
         os.mkdir(join(temp_dir, 'interfaces.d'))
 
-        f1 = InterfacesFile(self.interfaces_filename_one)
+        f1 = InterfacesFile(self.interfaces_filename_three)
         new_filename = join(temp_dir, 'interfaces')
         h1 = hash(f1)
         f1.save(recursive=True, filename=new_filename)
