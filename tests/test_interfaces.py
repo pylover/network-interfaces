@@ -10,10 +10,13 @@ __author__ = 'vahid'
 this_dir = abspath(dirname(__file__))
 data_dir = join(this_dir, 'data')
 
+
 class NetworkingCase(unittest.TestCase):
 
     def setUp(self):
-        self.interfaces_filename = join(data_dir, 'interfaces')
+        self.interfaces_filename_one = join(data_dir, 'interfaces_one')
+        self.interfaces_filename_two = join(data_dir, 'interfaces_two')
+        self.interfaces_filename_three = join(data_dir, 'interfaces_three')
 
     def checkup_interfaces_file(self, filename):
         f = InterfacesFile(filename)
@@ -97,11 +100,20 @@ class NetworkingCase(unittest.TestCase):
 
         return f
 
+    def test_load_one(self):
+        self.checkup_interfaces_file(self.interfaces_filename_one)
+
+    def test_load_two(self):
+        self.checkup_interfaces_file(self.interfaces_filename_two)
+
+    def test_load_three(self):
+        self.checkup_interfaces_file(self.interfaces_filename_three)
+
     def test_load_save(self):
-        f1 = self.checkup_interfaces_file(self.interfaces_filename)
+        f1 = self.checkup_interfaces_file(self.interfaces_filename_three)
         h1 = hash(f1)
         f1.save(recursive=True)
-        f2 = self.checkup_interfaces_file(self.interfaces_filename)
+        f2 = self.checkup_interfaces_file(self.interfaces_filename_three)
         h2 = hash(f2)
         self.assertEqual(h1, h2)
 
@@ -109,7 +121,7 @@ class NetworkingCase(unittest.TestCase):
         temp_dir = tempfile.mkdtemp()
         os.mkdir(join(temp_dir, 'interfaces.d'))
 
-        f1 = InterfacesFile(self.interfaces_filename)
+        f1 = InterfacesFile(self.interfaces_filename_three)
         new_filename = join(temp_dir, 'interfaces')
         h1 = hash(f1)
         f1.save(recursive=True, filename=new_filename)
@@ -136,7 +148,7 @@ class NetworkingCase(unittest.TestCase):
         #print eth0.netmask
 
     def test_validate(self):
-        f1 = InterfacesFile(self.interfaces_filename)
+        f1 = InterfacesFile(self.interfaces_filename_one)
         eth0 = f1.get_iface('eth0')
         self.assertTrue(eth0.validate())
 

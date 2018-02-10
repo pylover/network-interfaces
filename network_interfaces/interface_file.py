@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import glob
 import re
 import os.path
 import shutil
@@ -8,6 +9,7 @@ from .source import SourceDirectory, Source
 from .startup import StartupStanza
 from .iface import Iface, Mapping
 __author__ = 'vahid'
+
 
 class InterfacesFile(object):
 
@@ -40,7 +42,19 @@ class InterfacesFile(object):
                 if Stanza.is_stanza(line):
                     if current_stanza:
                         stanzas.append(current_stanza)
-                    current_stanza = Stanza.create(line, self.filename)
+                    cells = re.split('\s+', line)
+                    if cells[0] == 'source' and cells[1].endswith('/*'):
+                        list_files = glob.glob(os.path.join(self.dirname, cells[1]))
+                        for file in list_files:
+                            if file.endswith('.back'):
+                                continue
+                            file = f'source {file}'
+                            file = file.replace(f'{self.dirname}/', '')
+                            s = Stanza.create(file, self.filename)
+                            stanzas.append(s)
+                            current_stanza = None
+                    else:
+                        current_stanza = Stanza.create(line, self.filename)
                 else:
                     current_stanza.add_entry(line)
             if current_stanza:
@@ -55,6 +69,7 @@ class InterfacesFile(object):
             stanzas.remove(i)
 
         self.sources = [source for source in stanzas if isinstance(source, (Source, SourceDirectory))]
+
         subfiles = []
         for i in self.sources:
             if isinstance(i, SourceDirectory):
@@ -69,10 +84,23 @@ class InterfacesFile(object):
             self.sub_files.append(InterfacesFile(subfile[0], source=subfile[1]))
 
         for startup in [s for s in stanzas if isinstance(s, StartupStanza)]:
-            self.get_iface(startup.iface_name).startup = startup
+            try:
+                self.get_iface(startup.iface_name).startup = startup
+            except KeyError:
+                continue
 
     def find_iface(self, name):
         return [iface for iface in self.interfaces if iface.name.index(name)]
+
+    def add_iface(self, iface):
+
+        if iface.name in [x.name for x in self.interfaces + self.mappings]:
+            raise KeyError("interface definition already exists")
+
+        if isinstance(iface, Iface):
+            self.interfaces.append(iface)
+        elif isinstance(iface, Mapping):
+            self.mappings.append(iface)
 
     def get_iface(self, name):
         result = [iface for iface in self.interfaces + self.mappings if iface.name == name]
@@ -86,6 +114,27 @@ class InterfacesFile(object):
                 continue
 
         raise KeyError(name)
+
+    def as_string(self, validate=True, allow_correction=True):
+        content = list()
+
+        if validate:
+            self.validate(allow_correction=allow_correction)
+
+        content.append(self.header)
+        for iface in self.interfaces:
+            content.append('\n')
+            content.append(repr(iface))
+
+        for mapping in self.mappings:
+            content.append('\n')
+            content.append(repr(mapping))
+
+        for source in self.sources:
+            content.append('\n')
+            content.append(repr(source))
+
+        return ''.join(content)
 
     def validate(self, allow_correction=False):
         for stanza_collection in (self.interfaces, self.mappings, self.sources):
